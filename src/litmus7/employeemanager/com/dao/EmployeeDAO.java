@@ -1,37 +1,61 @@
 package litmus7.employeemanager.com.dao;
 
 import litmus7.employeemanager.com.model.Employee;
-import litmus7.employeemanager.com.util.DBConnectionUtil;
 import litmus7.employeemanager.com.response.Response;
+import litmus7.employeemanager.com.constant.Messages;
 
+import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.util.List;
+import java.util.Properties;
 
-public class EmployeeDAO implements IEmployeeDAO {
+public class EmployeeDAO {
 
-    @Override
-    public Response insertEmployee(Employee employee) {
-        String query = "INSERT INTO employees (name, email, department, salary) VALUES (?, ?, ?, ?)";
+    private Connection getConnection() throws Exception {
+        Properties props = new Properties();
 
-        try (Connection connection = DBConnectionUtil.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
+        // Load from resources folder
+        InputStream in = getClass().getClassLoader().getResourceAsStream("litmus7/employeemanager/com/resource/db.properties");
 
-            stmt.setString(1, employee.getName());
-            stmt.setString(2, employee.getEmail());
-            stmt.setString(3, employee.getDepartment());
-            stmt.setDouble(4, employee.getSalary());
+        if (in == null) {
+            throw new Exception("db.properties not found in classpath (resources folder).");
+        }
 
-            int rows = stmt.executeUpdate();
+        props.load(in);
 
-            if (rows > 0) {
-                return new Response(200, "Employee inserted successfully");
-            } else {
-                return new Response(500, "Failed to insert employee");
+        String url = props.getProperty("db.url");
+        String username = props.getProperty("db.username");
+        String password = props.getProperty("db.password");
+        String driver = props.getProperty("db.driver");
+
+        Class.forName(driver);
+        return DriverManager.getConnection(url, username, password);
+    }
+
+    public Response insertEmployees(List<Employee> employees) {
+        try (Connection conn = getConnection()) {
+            String sql = "INSERT INTO employees (id, first_name, last_name, email, phone, department, salary, join_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            for (Employee emp : employees) {
+                ps.setInt(1, emp.getEmpId());
+                ps.setString(2, emp.getFirstName());
+                ps.setString(3, emp.getLastName());
+                ps.setString(4, emp.getEmail());
+                ps.setString(5, emp.getPhone());
+                ps.setString(6, emp.getDepartment());
+                ps.setDouble(7, emp.getSalary());
+                ps.setString(8, emp.getJoinDate());
+                ps.addBatch();
             }
 
-        } catch (SQLException e) {
-            return new Response(500, "SQL Exception: " + e.getMessage());
+            ps.executeBatch();
+            return new Response("Success", Messages.UPLOAD_SUCCESS);
+
+        } catch (Exception e) {
+            return new Response("Failed", Messages.UPLOAD_FAILED + " Error: " + e.getMessage());
         }
     }
 }
