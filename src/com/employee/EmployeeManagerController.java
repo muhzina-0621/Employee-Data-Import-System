@@ -20,7 +20,7 @@ public class EmployeeManagerController {
                 String[] tokens = line.split(",");
 
                 if (tokens.length < 8) {
-                    System.out.println("⚠️ Skipped invalid row: " + line);
+                    System.out.println("Skipped invalid row: " + line);
                     continue;
                 }
 
@@ -38,11 +38,11 @@ public class EmployeeManagerController {
                     employees.add(emp);
 
                 } catch (NumberFormatException e) {
-                    System.out.println("⚠️ Skipped row due to invalid number format: " + line);
+                    System.out.println("Skipped row due to invalid number format: " + line);
                 }
             }
         } catch (IOException e) {
-            System.err.println("❌ Error reading CSV: " + e.getMessage());
+            System.err.println("Error reading CSV: " + e.getMessage());
         }
 
         return employees;
@@ -59,7 +59,7 @@ public class EmployeeManagerController {
             ResultSet rs = checkStmt.executeQuery();
             rs.next();
             if (rs.getInt(1) > 0) {
-                System.out.println("⚠️ Skipping existing emp_id " + emp.getEmpId());
+                System.out.println("Skipping existing emp_id " + emp.getEmpId());
                 return;
             }
         }
@@ -77,7 +77,7 @@ public class EmployeeManagerController {
             insertStmt.setString(8, emp.getJoinDate());
 
             insertStmt.executeUpdate();
-            System.out.println("✅ Inserted employee: " + emp.getEmpId());
+            System.out.println("Inserted employee: " + emp.getEmpId());
         }
     }
 
@@ -89,11 +89,11 @@ public class EmployeeManagerController {
                 try {
                     writeToDB(emp, conn);
                 } catch (SQLException e) {
-                    System.out.println("❌ Failed to insert emp_id " + emp.getEmpId() + ": " + e.getMessage());
+                    System.out.println("Failed to insert emp_id " + emp.getEmpId() + ": " + e.getMessage());
                 }
             }
         } catch (SQLException e) {
-            System.err.println("❌ Database connection error: " + e.getMessage());
+            System.err.println("Database connection error: " + e.getMessage());
         }
     }
 }
